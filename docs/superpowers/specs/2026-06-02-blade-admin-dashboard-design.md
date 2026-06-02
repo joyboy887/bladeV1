@@ -41,9 +41,17 @@ hand), barbers (name, photo, availability, services offered, active), services
 - Owner account seeded by `scripts/create-admin.mjs`, which calls the Supabase Auth
   admin API (`POST {SUPABASE_URL}/auth/v1/admin/users`) with the **service-role** key,
   `email_confirm: true`, and a password supplied at run time.
-- "Invite staff later" needs no schema change: every authenticated user already has
-  full admin access via RLS (`0001_init.sql:127-138`). Adding staff = creating more
-  auth users.
+- **Admin authorization is explicit, not implicit.** `requireAdmin()` and the
+  middleware both require the user's email to be on the `ADMIN_EMAILS` allowlist
+  (comma-separated env var, fail-closed). Authentication alone is never enough —
+  this holds regardless of Supabase project signup configuration.
+- "Invite staff later" = add the new email to `ADMIN_EMAILS` and create their auth
+  user. No schema change.
+- **Defense-in-depth follow-up (Task 3b):** the RLS policies still grant any
+  `authenticated` user full CRUD (`0001_init.sql:127-138`), so a self-registered
+  user could hit the Supabase REST API directly. Confirm signup is disabled and
+  scope RLS to an admin role claim / `admins` table before treating RLS as the
+  last line of defense for admin writes.
 
 ### Data layer (three clients, clear boundaries)
 - **Session client** (new, `src/lib/supabase/ssr.js`) — cookie-bound via `@supabase/ssr`,
