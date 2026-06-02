@@ -1,5 +1,6 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse } from "next/server";
+import { isAdminEmail } from "@/lib/admin-allowlist";
 
 // Refreshes the Supabase session cookie and enforces the /admin gate.
 export async function updateSession(request) {
@@ -34,7 +35,8 @@ export async function updateSession(request) {
   const isAdmin = pathname.startsWith("/admin");
   const isLogin = pathname === "/admin/login";
 
-  if (isAdmin && !isLogin && !user) {
+  // Authenticated AND on the admin allowlist — authentication alone is not enough.
+  if (isAdmin && !isLogin && !isAdminEmail(user?.email)) {
     const url = request.nextUrl.clone();
     url.pathname = "/admin/login";
     return NextResponse.redirect(url);
