@@ -32,3 +32,30 @@ test("shopSchema rejects bad email when provided", () => {
     shopSchema.parse({ name: "x", tagline: "y", email: "not-an-email", currency: "GBP", timezone: "Europe/London" })
   );
 });
+
+import { serviceSchema } from "./admin-validation.js";
+
+test("serviceSchema coerces numeric strings", () => {
+  const parsed = serviceSchema.parse({
+    name: "Haircut",
+    description: "Cut",
+    duration_minutes: "30",
+    price: "18.00",
+    sort_order: "1",
+    active: "on",
+  });
+  assert.equal(parsed.duration_minutes, 30);
+  assert.equal(parsed.price, 18);
+  assert.equal(parsed.active, true);
+});
+
+test("serviceSchema rejects zero duration", () => {
+  assert.throws(() =>
+    serviceSchema.parse({ name: "x", duration_minutes: "0", price: "5" })
+  );
+});
+
+test("serviceSchema treats missing checkbox as inactive", () => {
+  const parsed = serviceSchema.parse({ name: "x", duration_minutes: "15", price: "5" });
+  assert.equal(parsed.active, false);
+});

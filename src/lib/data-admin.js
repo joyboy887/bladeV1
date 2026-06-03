@@ -11,3 +11,12 @@ export async function getShopSettings(supabase) {
   if (error) throw error;
   return data;
 }
+
+export async function listServices(supabase) {
+  const { data, error } = await supabase
+    .from("services")
+    .select("*")
+    .order("sort_order", { ascending: true });
+  if (error) throw error;
+  return data;
+}
