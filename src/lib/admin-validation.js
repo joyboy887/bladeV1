@@ -44,6 +44,26 @@ export const serviceSchema = z.object({
   active: checkbox.default(false),
 });
 
+const rangeSchema = z
+  .object({ start: z.string().regex(timeRe, "Invalid time"), end: z.string().regex(timeRe, "Invalid time") })
+  .refine((r) => r.start < r.end, "End must be after start");
+
+const dayList = z.array(rangeSchema).default([]);
+
+export const availabilitySchema = z.object({
+  sun: dayList, mon: dayList, tue: dayList, wed: dayList, thu: dayList, fri: dayList, sat: dayList,
+});
+
+export const barberSchema = z.object({
+  name: z.string().trim().min(1, "Name is required").max(120),
+  bio: optText,
+  phone: optText,
+  email: optEmail,
+  sort_order: intFromString.refine((n) => n >= 0, "Sort order cannot be negative").default(0),
+  active: checkbox.default(false),
+  serviceIds: z.array(z.string().uuid()).default([]),
+});
+
 // Convert FormData to a plain object (all values as strings).
 export function formToObject(formData) {
   const obj = {};

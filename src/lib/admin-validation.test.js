@@ -59,3 +59,39 @@ test("serviceSchema treats missing checkbox as inactive", () => {
   const parsed = serviceSchema.parse({ name: "x", duration_minutes: "15", price: "5" });
   assert.equal(parsed.active, false);
 });
+
+import { barberSchema, availabilitySchema } from "./admin-validation.js";
+
+test("availabilitySchema accepts a weekly object with one range per day", () => {
+  const parsed = availabilitySchema.parse({
+    mon: [{ start: "09:00", end: "17:00" }],
+    tue: [],
+    wed: [{ start: "10:00", end: "18:00" }],
+    thu: [], fri: [], sat: [], sun: [],
+  });
+  assert.equal(parsed.mon[0].end, "17:00");
+});
+
+test("availabilitySchema rejects end before start", () => {
+  assert.throws(() =>
+    availabilitySchema.parse({
+      mon: [{ start: "17:00", end: "09:00" }],
+      tue: [], wed: [], thu: [], fri: [], sat: [], sun: [],
+    })
+  );
+});
+
+test("barberSchema parses serviceIds and active checkbox", () => {
+  const parsed = barberSchema.parse({
+    name: "Andre",
+    bio: "",
+    phone: "",
+    email: "",
+    sort_order: "3",
+    active: "on",
+    serviceIds: ["11111111-1111-1111-1111-111111111111"],
+  });
+  assert.equal(parsed.name, "Andre");
+  assert.equal(parsed.serviceIds.length, 1);
+  assert.equal(parsed.active, true);
+});
