@@ -95,3 +95,22 @@ test("barberSchema parses serviceIds and active checkbox", () => {
   assert.equal(parsed.serviceIds.length, 1);
   assert.equal(parsed.active, true);
 });
+
+import { closureSchema } from "./admin-validation.js";
+
+test("closureSchema accepts whole-shop closure with empty barberId", () => {
+  const parsed = closureSchema.parse({
+    barber_id: "",
+    start_date: "2026-07-01",
+    end_date: "2026-07-03",
+    reason: "Holiday",
+  });
+  assert.equal(parsed.barber_id, null);
+  assert.equal(parsed.reason, "Holiday");
+});
+
+test("closureSchema rejects end before start", () => {
+  assert.throws(() =>
+    closureSchema.parse({ barber_id: "", start_date: "2026-07-05", end_date: "2026-07-01" })
+  );
+});

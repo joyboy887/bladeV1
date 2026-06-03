@@ -64,6 +64,22 @@ export const barberSchema = z.object({
   serviceIds: z.array(z.string().uuid()).default([]),
 });
 
+export const closureSchema = z
+  .object({
+    barber_id: z
+      .string()
+      .trim()
+      .transform((v) => (v === "" ? null : v))
+      .refine((v) => v === null || /^[0-9a-f-]{36}$/i.test(v), "Invalid barber"),
+    start_date: z.string().regex(dateRe, "Invalid date"),
+    end_date: z.string().regex(dateRe, "Invalid date"),
+    reason: optText,
+  })
+  .refine((c) => c.end_date >= c.start_date, {
+    message: "End date must be on or after start date",
+    path: ["end_date"],
+  });
+
 // Convert FormData to a plain object (all values as strings).
 export function formToObject(formData) {
   const obj = {};

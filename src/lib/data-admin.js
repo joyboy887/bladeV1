@@ -44,3 +44,12 @@ export async function listAllSlugs(supabase) {
   if (error) throw error;
   return data.map((r) => r.slug);
 }
+
+export async function listClosures(supabase) {
+  const { data, error } = await supabase
+    .from("closures")
+    .select("*, barbers(name)")
+    .order("start_date", { ascending: false });
+  if (error) throw error;
+  return data;
+}
