@@ -35,8 +35,10 @@ export async function updateSession(request) {
   const isAdmin = pathname.startsWith("/admin");
   const isLogin = pathname === "/admin/login";
 
-  // Authenticated AND on the admin allowlist — authentication alone is not enough.
-  if (isAdmin && !isLogin && !isAdminEmail(user?.email)) {
+  // Authenticated, email-confirmed, AND on the admin allowlist —
+  // authentication alone (or an unverified email) is not enough.
+  const isAllowed = !!user?.email_confirmed_at && isAdminEmail(user?.email);
+  if (isAdmin && !isLogin && !isAllowed) {
     const url = request.nextUrl.clone();
     url.pathname = "/admin/login";
     return NextResponse.redirect(url);

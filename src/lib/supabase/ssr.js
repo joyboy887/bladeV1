@@ -41,6 +41,10 @@ export async function requireAdmin() {
   const {
     data: { user },
   } = await supabase.auth.getUser();
-  if (!user || !isAdminEmail(user.email)) redirect("/admin/login");
+  // Require a confirmed email before trusting it against the allowlist —
+  // an unverified email is mutable/unproven and must be treated as anonymous.
+  if (!user || !user.email_confirmed_at || !isAdminEmail(user.email)) {
+    redirect("/admin/login");
+  }
   return { supabase, user };
 }
