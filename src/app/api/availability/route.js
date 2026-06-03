@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { createServiceClient } from "@/lib/supabase/server.js";
 import { getAvailableSlots } from "@/lib/availability.js";
 import { availabilityQuerySchema } from "@/lib/validation.js";
+import { otherBookings } from "@/lib/reschedule.js";
 
 export const dynamic = "force-dynamic";
 
@@ -16,6 +17,7 @@ export async function GET(request) {
     return NextResponse.json({ error: "Invalid query" }, { status: 400 });
   }
   const { barberId, serviceId, date } = parsed.data;
+  const excludeId = searchParams.get("excludeId");
   const db = createServiceClient();
 
   const [{ data: barber }, { data: service }, { data: shop }] = await Promise.all([
@@ -30,15 +32,17 @@ export async function GET(request) {
   // Existing non-cancelled bookings for this barber/date, joined to durations.
   const { data: bookings } = await db
     .from("bookings")
-    .select("booking_time, services(duration_minutes)")
+    .select("id, booking_time, services(duration_minutes)")
     .eq("barber_id", barberId)
     .eq("booking_date", date)
     .neq("status", "cancelled");
 
-  const existingBookings = (bookings ?? []).map((b) => ({
+  const mapped = (bookings ?? []).map((b) => ({
+    id: b.id,
     booking_time: b.booking_time.slice(0, 5),
     duration_minutes: b.services?.duration_minutes ?? 0,
   }));
+  const existingBookings = otherBookings(mapped, excludeId);
 
   const { data: closures } = await db
     .from("closures")
