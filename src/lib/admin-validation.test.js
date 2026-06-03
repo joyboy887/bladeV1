@@ -114,3 +114,40 @@ test("closureSchema rejects end before start", () => {
     closureSchema.parse({ barber_id: "", start_date: "2026-07-05", end_date: "2026-07-01" })
   );
 });
+
+import { manualBookingSchema, rescheduleSchema } from "./admin-validation.js";
+
+test("manualBookingSchema allows empty phone and email", () => {
+  const parsed = manualBookingSchema.parse({
+    barberId: "11111111-1111-1111-1111-111111111111",
+    serviceId: "22222222-2222-2222-2222-222222222222",
+    customerName: "Walk In",
+    customerPhone: "",
+    customerEmail: "",
+    date: "2026-07-01",
+    time: "10:00",
+  });
+  assert.equal(parsed.customerName, "Walk In");
+  assert.equal(parsed.customerPhone, "");
+});
+
+test("manualBookingSchema requires a name", () => {
+  assert.throws(() =>
+    manualBookingSchema.parse({
+      barberId: "11111111-1111-1111-1111-111111111111",
+      serviceId: "22222222-2222-2222-2222-222222222222",
+      customerName: "",
+      date: "2026-07-01",
+      time: "10:00",
+    })
+  );
+});
+
+test("rescheduleSchema validates barber, date, time", () => {
+  const parsed = rescheduleSchema.parse({
+    barberId: "11111111-1111-1111-1111-111111111111",
+    date: "2026-07-02",
+    time: "11:30",
+  });
+  assert.equal(parsed.time, "11:30");
+});

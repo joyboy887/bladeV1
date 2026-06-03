@@ -89,6 +89,22 @@ export function formToObject(formData) {
   return obj;
 }
 
+export const manualBookingSchema = z.object({
+  barberId: z.string().uuid(),
+  serviceId: z.string().uuid(),
+  customerName: z.string().trim().min(1, "Name is required").max(120),
+  customerPhone: z.string().trim().max(32).optional().default(""),
+  customerEmail: optEmail,
+  date: z.string().regex(dateRe, "Invalid date"),
+  time: z.string().regex(timeRe, "Invalid time"),
+});
+
+export const rescheduleSchema = z.object({
+  barberId: z.string().uuid(),
+  date: z.string().regex(dateRe, "Invalid date"),
+  time: z.string().regex(timeRe, "Invalid time"),
+});
+
 // Validate; return { data } or { fieldErrors } (flattened from Zod).
 export function safeValidate(schema, obj) {
   const result = schema.safeParse(obj);
