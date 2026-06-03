@@ -53,3 +53,47 @@ export async function listClosures(supabase) {
   if (error) throw error;
   return data;
 }
+
+// Bookings list with joined barber/service names, filtered.
+export async function listBookings(supabase, { from, to, barberId, status } = {}) {
+  let q = supabase
+    .from("bookings")
+    .select("*, barbers(name), services(name, duration_minutes)")
+    .order("booking_date", { ascending: true })
+    .order("booking_time", { ascending: true });
+  if (from) q = q.gte("booking_date", from);
+  if (to) q = q.lte("booking_date", to);
+  if (barberId) q = q.eq("barber_id", barberId);
+  if (status) q = q.eq("status", status);
+  const { data, error } = await q;
+  if (error) throw error;
+  return data;
+}
+
+export async function getBooking(supabase, id) {
+  const { data, error } = await supabase
+    .from("bookings")
+    .select("*, barbers(name), services(name, duration_minutes)")
+    .eq("id", id)
+    .single();
+  if (error) throw error;
+  return data;
+}
+
+// Non-cancelled bookings for a barber on a date, optionally excluding one id.
+export async function bookingsForSlotCheck(supabase, barberId, date, excludeId = null) {
+  let q = supabase
+    .from("bookings")
+    .select("id, booking_time, services(duration_minutes)")
+    .eq("barber_id", barberId)
+    .eq("booking_date", date)
+    .neq("status", "cancelled");
+  if (excludeId) q = q.neq("id", excludeId);
+  const { data, error } = await q;
+  if (error) throw error;
+  return data.map((b) => ({
+    id: b.id,
+    booking_time: b.booking_time,
+    duration_minutes: b.services?.duration_minutes ?? 0,
+  }));
+}

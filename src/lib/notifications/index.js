@@ -34,3 +34,25 @@ export async function sendBookingNotifications({ booking, barber, service, shop 
   ]);
   return { results };
 }
+
+export async function sendCancellation({ booking, barber, service, shop }) {
+  const when = `${booking.booking_date} at ${formatTime12h(booking.booking_time)}`;
+  const text = `${shop?.name ?? "The Blade"}: your ${service?.name ?? "appointment"} with ${barber?.name ?? "us"} on ${when} has been cancelled. Call us to rebook.`;
+  const html = `<h2>${shop?.name ?? "The Blade"}</h2><p>Hi ${booking.customer_name}, your booking on ${when} has been cancelled.</p><p>Call us to rebook.</p>`;
+  const results = await Promise.allSettled([
+    sendSms(booking.customer_phone || null, text),
+    sendEmail(booking.customer_email || null, `Booking cancelled — ${shop?.name ?? "The Blade"}`, html),
+  ]);
+  return { results };
+}
+
+export async function sendReschedule({ booking, barber, service, shop }) {
+  const when = `${booking.booking_date} at ${formatTime12h(booking.booking_time)}`;
+  const text = `${shop?.name ?? "The Blade"}: your ${service?.name ?? "appointment"} with ${barber?.name ?? "us"} has been moved to ${when}. See you then!`;
+  const html = `<h2>${shop?.name ?? "The Blade"}</h2><p>Hi ${booking.customer_name}, your booking has been moved to <strong>${when}</strong> with ${barber?.name ?? "us"}.</p>`;
+  const results = await Promise.allSettled([
+    sendSms(booking.customer_phone || null, text),
+    sendEmail(booking.customer_email || null, `Booking updated — ${shop?.name ?? "The Blade"}`, html),
+  ]);
+  return { results };
+}
