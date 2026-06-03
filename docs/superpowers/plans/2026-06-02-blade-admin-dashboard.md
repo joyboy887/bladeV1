@@ -24,7 +24,7 @@
 ```
 package.json                                   MODIFY  add @supabase/ssr
 next.config.mjs                                MODIFY  images.remotePatterns (Supabase Storage)
-middleware.js                                  CREATE  session refresh + /admin gate
+src/middleware.js                              CREATE  session refresh + /admin gate (in src/ because the app uses a src dir)
 scripts/create-admin.mjs                       CREATE  seed owner auth user
 
 src/lib/supabase/ssr.js                        CREATE  createSessionClient() + requireAdmin()
@@ -250,9 +250,9 @@ export async function updateSession(request) {
 }
 ```
 
-- [ ] **Step 2: Create `middleware.js` at the repo root**
+- [ ] **Step 2: Create `src/middleware.js`**
 
-Create `middleware.js`:
+This project uses a `src/` directory, so Next.js only loads middleware from `src/middleware.js` — NOT the repo root. Create `src/middleware.js`:
 ```js
 import { updateSession } from "@/lib/supabase/middleware-client";
 
@@ -276,7 +276,7 @@ Expected: build succeeds; output mentions `ƒ Middleware`.
 - [ ] **Step 4: Commit**
 
 ```bash
-git add middleware.js src/lib/supabase/middleware-client.js
+git add src/middleware.js src/lib/supabase/middleware-client.js
 git commit -m "feat: gate /admin/* behind Supabase session in middleware"
 ```
 
