@@ -1,0 +1,153 @@
+import { test } from "node:test";
+import assert from "node:assert/strict";
+import { shopSchema } from "./admin-validation.js";
+
+test("shopSchema accepts a valid shop settings payload", () => {
+  const parsed = shopSchema.parse({
+    name: "The Blade",
+    tagline: "Sharp cuts.",
+    hero_text: "Precision cuts",
+    hero_subtext: "Book now",
+    phone: "",
+    email: "",
+    address: "",
+    instagram: "",
+    currency: "GBP",
+    timezone: "Europe/London",
+    notify_phone: "",
+    notify_email: "",
+  });
+  assert.equal(parsed.name, "The Blade");
+  assert.equal(parsed.currency, "GBP");
+});
+
+test("shopSchema rejects empty name", () => {
+  assert.throws(() =>
+    shopSchema.parse({ name: "", tagline: "x", currency: "GBP", timezone: "Europe/London" })
+  );
+});
+
+test("shopSchema rejects bad email when provided", () => {
+  assert.throws(() =>
+    shopSchema.parse({ name: "x", tagline: "y", email: "not-an-email", currency: "GBP", timezone: "Europe/London" })
+  );
+});
+
+import { serviceSchema } from "./admin-validation.js";
+
+test("serviceSchema coerces numeric strings", () => {
+  const parsed = serviceSchema.parse({
+    name: "Haircut",
+    description: "Cut",
+    duration_minutes: "30",
+    price: "18.00",
+    sort_order: "1",
+    active: "on",
+  });
+  assert.equal(parsed.duration_minutes, 30);
+  assert.equal(parsed.price, 18);
+  assert.equal(parsed.active, true);
+});
+
+test("serviceSchema rejects zero duration", () => {
+  assert.throws(() =>
+    serviceSchema.parse({ name: "x", duration_minutes: "0", price: "5" })
+  );
+});
+
+test("serviceSchema treats missing checkbox as inactive", () => {
+  const parsed = serviceSchema.parse({ name: "x", duration_minutes: "15", price: "5" });
+  assert.equal(parsed.active, false);
+});
+
+import { barberSchema, availabilitySchema } from "./admin-validation.js";
+
+test("availabilitySchema accepts a weekly object with one range per day", () => {
+  const parsed = availabilitySchema.parse({
+    mon: [{ start: "09:00", end: "17:00" }],
+    tue: [],
+    wed: [{ start: "10:00", end: "18:00" }],
+    thu: [], fri: [], sat: [], sun: [],
+  });
+  assert.equal(parsed.mon[0].end, "17:00");
+});
+
+test("availabilitySchema rejects end before start", () => {
+  assert.throws(() =>
+    availabilitySchema.parse({
+      mon: [{ start: "17:00", end: "09:00" }],
+      tue: [], wed: [], thu: [], fri: [], sat: [], sun: [],
+    })
+  );
+});
+
+test("barberSchema parses serviceIds and active checkbox", () => {
+  const parsed = barberSchema.parse({
+    name: "Andre",
+    bio: "",
+    phone: "",
+    email: "",
+    sort_order: "3",
+    active: "on",
+    serviceIds: ["11111111-1111-1111-1111-111111111111"],
+  });
+  assert.equal(parsed.name, "Andre");
+  assert.equal(parsed.serviceIds.length, 1);
+  assert.equal(parsed.active, true);
+});
+
+import { closureSchema } from "./admin-validation.js";
+
+test("closureSchema accepts whole-shop closure with empty barberId", () => {
+  const parsed = closureSchema.parse({
+    barber_id: "",
+    start_date: "2026-07-01",
+    end_date: "2026-07-03",
+    reason: "Holiday",
+  });
+  assert.equal(parsed.barber_id, null);
+  assert.equal(parsed.reason, "Holiday");
+});
+
+test("closureSchema rejects end before start", () => {
+  assert.throws(() =>
+    closureSchema.parse({ barber_id: "", start_date: "2026-07-05", end_date: "2026-07-01" })
+  );
+});
+
+import { manualBookingSchema, rescheduleSchema } from "./admin-validation.js";
+
+test("manualBookingSchema allows empty phone and email", () => {
+  const parsed = manualBookingSchema.parse({
+    barberId: "11111111-1111-1111-1111-111111111111",
+    serviceId: "22222222-2222-2222-2222-222222222222",
+    customerName: "Walk In",
+    customerPhone: "",
+    customerEmail: "",
+    date: "2026-07-01",
+    time: "10:00",
+  });
+  assert.equal(parsed.customerName, "Walk In");
+  assert.equal(parsed.customerPhone, "");
+});
+
+test("manualBookingSchema requires a name", () => {
+  assert.throws(() =>
+    manualBookingSchema.parse({
+      barberId: "11111111-1111-1111-1111-111111111111",
+      serviceId: "22222222-2222-2222-2222-222222222222",
+      customerName: "",
+      date: "2026-07-01",
+      time: "10:00",
+    })
+  );
+});
+
+test("rescheduleSchema validates barber, date, time", () => {
+  const parsed = rescheduleSchema.parse({
+    barberId: "11111111-1111-1111-1111-111111111111",
+    date: "2026-07-02",
+    time: "11:30",
+  });
+  assert.equal(parsed.time, "11:30");
+});

@@ -1,0 +1,62 @@
+.admin-shell {
+  min-height: 100vh;
+  background: #f5f6f8;
+  color: #14161a;
+  font-family: var(--font-inter, system-ui, sans-serif);
+  display: grid;
+  grid-template-columns: 220px 1fr;
+}
+.admin-main {
+  padding: 1.5rem 2rem;
+  max-width: 1100px;
+}
+.admin-login {
+  min-height: 100vh;
+  background: #f5f6f8;
+  color: #14161a;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-inter, system-ui, sans-serif);
+}
+.admin-card {
+  background: #fff;
+  border: 1px solid #e3e6ea;
+  border-radius: 10px;
+  padding: 1.25rem 1.5rem;
+  margin-bottom: 1.25rem;
+}
+.admin-h1 { font-size: 1.5rem; font-weight: 700; margin: 0 0 1rem; }
+.admin-h2 { font-size: 1.1rem; font-weight: 700; margin: 0 0 0.75rem; }
+.admin-label { display: block; font-size: 0.85rem; font-weight: 600; margin: 0.75rem 0 0.25rem; }
+.admin-input, .admin-select, .admin-textarea {
+  width: 100%; padding: 0.5rem 0.65rem; border: 1px solid #cfd4da;
+  border-radius: 7px; background: #fff; color: #14161a; font-size: 0.95rem;
+}
+.admin-textarea { min-height: 70px; resize: vertical; }
+.admin-btn {
+  display: inline-block; padding: 0.5rem 0.9rem; border-radius: 7px; border: none;
+  background: #14161a; color: #fff; font-weight: 600; cursor: pointer; font-size: 0.9rem;
+}
+.admin-btn:disabled { opacity: 0.5; cursor: default; }
+.admin-btn-secondary { background: #e3e6ea; color: #14161a; }
+.admin-btn-danger { background: #c8323a; color: #fff; }
+.admin-table { width: 100%; border-collapse: collapse; font-size: 0.9rem; }
+.admin-table th, .admin-table td {
+  text-align: left; padding: 0.55rem 0.6rem; border-bottom: 1px solid #eceef1;
+}
+.admin-table th { font-weight: 600; color: #555; }
+.field-error { color: #c8323a; font-size: 0.8rem; margin-top: 0.25rem; }
+.form-error { color: #c8323a; font-size: 0.9rem; margin: 0.5rem 0; }
+.form-ok { color: #3db960; font-size: 0.9rem; margin: 0.5rem 0; }
+.admin-nav { background: #14161a; color: #fff; padding: 1.25rem 1rem; }
+.admin-nav a { display: block; color: #cfd4da; text-decoration: none; padding: 0.5rem 0.6rem; border-radius: 6px; font-size: 0.92rem; }
+.admin-nav a:hover { background: #23262c; color: #fff; }
+.admin-nav .brand { color: #fff; font-weight: 700; margin-bottom: 1rem; font-size: 1.05rem; }
+.muted { color: #6b7178; }
+.badge { display: inline-block; padding: 0.1rem 0.5rem; border-radius: 999px; font-size: 0.75rem; font-weight: 600; }
+.badge-confirmed { background: #e6f4ea; color: #1f7a3d; }
+.badge-completed { background: #e6edf7; color: #2b5797; }
+.badge-cancelled { background: #fbe7e8; color: #b3262d; }
+.badge-no_show { background: #f3e8d0; color: #8a6d1f; }
+.row-actions { display: flex; gap: 0.4rem; flex-wrap: wrap; }
