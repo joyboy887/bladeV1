@@ -1,4 +1,5 @@
 import "server-only";
+import { TZDate } from "@date-fns/tz";
 
 // All helpers take an authenticated session client (from requireAdmin()).
 
@@ -96,4 +97,28 @@ export async function bookingsForSlotCheck(supabase, barberId, date, excludeId =
     booking_time: b.booking_time,
     duration_minutes: b.services?.duration_minutes ?? 0,
   }));
+}
+
+// Returns today's date string (YYYY-MM-DD) in the shop timezone.
+export function todayInTz(timezone) {
+  const n = new TZDate(new Date(), timezone);
+  return [
+    n.getFullYear(),
+    String(n.getMonth() + 1).padStart(2, "0"),
+    String(n.getDate()).padStart(2, "0"),
+  ].join("-");
+}
+
+export async function getDashboardData(supabase, timezone) {
+  const today = todayInTz(timezone);
+  const todays = await listBookings(supabase, { from: today, to: today });
+  const upcoming = await listBookings(supabase, { from: today, status: "confirmed" });
+  return {
+    today,
+    todays,
+    counts: {
+      todayTotal: todays.length,
+      upcomingConfirmed: upcoming.length,
+    },
+  };
 }
