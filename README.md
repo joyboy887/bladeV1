@@ -1,13 +1,13 @@
 # The Blade Hair Studio — Booking Platform
 
 Mobile-first barbershop booking site. Next.js (App Router, JavaScript) + Supabase +
-Twilio (SMS) + Resend (email). Dark/neon brand. Deploys to Vercel.
+WhatsApp (Meta Cloud API) + Resend (email). Dark/neon brand. Deploys to Vercel.
 
 ## What works (Spec 1)
 - Home page (hero, services, barbers, gallery, footer) driven by `shop_settings`.
 - Booking flow: barber → service → date → time → details → review → confirm.
 - Real availability with double-booking prevention (DB partial-unique index).
-- Server-side SMS + email confirmations to customer and owner (fail-soft).
+- Server-side WhatsApp + email confirmations to customer and owner (fail-soft).
 - Confirmation page with booking summary.
 
 ## What works (Spec 2 — Admin dashboard)
@@ -43,7 +43,10 @@ reserved for the public booking insert only.
 2. **Env:** copy `.env.example` to `.env.local` and fill in:
    - **Supabase** → supabase.com → Project Settings → API → Project URL, anon key, service_role key.
    - **`ADMIN_EMAILS`** → comma-separated list of admin emails allowed into `/admin`.
-   - **Twilio** → twilio.com → Console → Account SID, Auth Token, a sender number.
+   - **WhatsApp** → developers.facebook.com → your app → WhatsApp → API Setup →
+     `WHATSAPP_PHONE_NUMBER_ID` + a (permanent system-user) `WHATSAPP_ACCESS_TOKEN`.
+     Create the message templates listed under **Notifications** below. (SMS via
+     Twilio was dropped — it's unreliable for UK senders.)
    - **Resend** → resend.com → API Keys → API key; verify a sending domain or use the test sender for `EMAIL_FROM`.
 3. **Database:** the schema + seed live in `supabase/migrations/0001_init.sql`,
    `supabase/migrations/0002_admin_storage.sql` (the `media` Storage bucket for barber
@@ -66,9 +69,27 @@ reserved for the public booking insert only.
 Push to GitHub, import the repo in Vercel, add the same env vars in Project Settings,
 deploy.
 
-## Notifications without keys
-If Twilio/Resend env vars are absent, sends are skipped and logged — the booking still
-succeeds. Add keys when ready.
+## Notifications
+Two fail-soft channels run in parallel (`src/lib/notifications/`): **WhatsApp** (Meta
+Cloud API) and **email** (Resend). If a channel's env vars are absent, its sends are
+skipped and logged — the booking still succeeds. Add keys when ready.
+
+**WhatsApp templates (required).** Booking confirmations are *business-initiated*
+messages, which WhatsApp only delivers as **pre-approved templates** (plain text is
+allowed only inside the 24h customer-service window). In Meta Business Manager →
+WhatsApp Manager → Message Templates, create these four (category **Utility**, language
+matching `WHATSAPP_TEMPLATE_LANG`, default `en`). Use numbered placeholders `{{1}}`…:
+
+| Template name (env override) | Body — suggested wording |
+|---|---|
+| `booking_confirmation` (`WA_TEMPLATE_CONFIRMATION`) | `Hi {{1}}, your booking at {{2}} is confirmed: {{3}} with {{4}} on {{5}}. See you soon!` |
+| `owner_new_booking` (`WA_TEMPLATE_OWNER`) | `New booking: {{1}} — {{2}} with {{3}} on {{4}}. Phone: {{5}}` |
+| `booking_cancelled` (`WA_TEMPLATE_CANCELLED`) | `Hi {{1}}, your {{2}} with {{3}} on {{4}} has been cancelled. Call us to rebook.` |
+| `booking_rescheduled` (`WA_TEMPLATE_RESCHEDULED`) | `Hi {{1}}, your {{2}} with {{3}} has been moved to {{4}}. See you then!` |
+
+The placeholder **order** is wired in `src/lib/notifications/index.js` — keep your
+template variables in the same order. Phone numbers entered as UK national (`07…`) are
+auto-converted to international form (`447…`) via `WHATSAPP_DEFAULT_COUNTRY_CODE`.
 
 ## Placeholders to replace later
 - **Barber photos:** barbers without a photo show styled monogram placeholders
@@ -86,7 +107,7 @@ succeeds. Add keys when ready.
 - Timezone and currency come from `shop_settings` (default `Europe/London`, `GBP`).
 
 ## Tested
-- `npm test` passes (availability, formatting, validation, admin schemas, slug, reschedule — 37 tests).
+- `npm test` passes (availability, formatting, validation, admin schemas, slug, reschedule, WhatsApp — 46 tests).
 - Manual browser pass: home loads; full booking completes; confirmation renders;
   double-booking returns 409; `next build` clean.
 
