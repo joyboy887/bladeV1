@@ -39,3 +39,23 @@ if (!res.ok) {
   process.exit(1);
 }
 console.log("Created admin user:", body.email ?? body.id);
+
+// Register the user in public.admins so RLS (is_admin()) grants dashboard
+// access. Without this row the user can log in but every table reads as empty.
+const adminRes = await fetch(`${url}/rest/v1/admins`, {
+  method: "POST",
+  headers: {
+    apikey: serviceKey,
+    Authorization: `Bearer ${serviceKey}`,
+    "Content-Type": "application/json",
+    Prefer: "resolution=merge-duplicates",
+  },
+  body: JSON.stringify({ user_id: body.id, email: body.email }),
+});
+
+if (!adminRes.ok) {
+  console.error("Created auth user but FAILED to add to admins table:", await adminRes.text());
+  console.error("Add it manually: insert into public.admins (user_id, email) values ('" + body.id + "', '" + body.email + "');");
+  process.exit(1);
+}
+console.log("Registered in admins table. Also add this email to ADMIN_EMAILS.");

@@ -17,6 +17,12 @@ dark customer site):
   plus a per-action `requireAdmin()` gate every `/admin/*` route. Admin access requires
   the user's **confirmed** email to be on the `ADMIN_EMAILS` allowlist (fail-closed) —
   authentication alone is not enough.
+- **Database-level auth (defense in depth):** RLS no longer trusts the bare
+  `authenticated` role. Every admin policy is scoped to `public.is_admin()`, which checks
+  the caller's immutable UUID against the `public.admins` table (`0003_admin_rls.sql`). A
+  self-registered user hitting the Supabase REST API directly with their own JWT reads and
+  writes **nothing**. The service-role key (public booking insert only) bypasses RLS;
+  anon/public reads are unchanged.
 - **Bookings:** list with date/barber/status filters; complete, no-show, cancel
   (notifies the customer, frees the slot), reschedule via live availability, and manual
   booking creation for walk-ins/phone.
@@ -45,7 +51,11 @@ reserved for the public booking insert only.
    Supabase MCP).
    - **Admin account:** create the owner login with
      `node --env-file=.env.local scripts/create-admin.mjs` (uses the service-role key;
-     sets a confirmed email + password). Ensure that email is listed in `ADMIN_EMAILS`.
+     sets a confirmed email + password, and registers the user in `public.admins` so RLS
+     grants dashboard access). Ensure that email is also listed in `ADMIN_EMAILS`.
+   - **Disable public signup** (Supabase Dashboard → Authentication → Sign In / Providers →
+     Email → turn off **"Allow new users to sign up"**). RLS already denies non-admins all
+     data, but this stops junk accounts from being created at all.
 4. **Images:** real photos live in `pic and images/`. Run `npm run images` to generate
    `public/images/*.webp` (already committed).
 5. **Run:** `npm run dev` → http://localhost:3000
@@ -82,6 +92,6 @@ succeeds. Add keys when ready.
 
 ## Roadmap
 - **Spec 3:** reminders (Vercel Cron), analytics, customer history, self-serve reschedule/cancel, calendar export.
-- **Security follow-up:** scope RLS to an admin role claim and disable public signup so a
-  self-registered authenticated user can't reach data via the Supabase REST API directly
-  (the app + middleware already enforce the `ADMIN_EMAILS` allowlist).
+- **Security:** RLS is now scoped to `public.admins` via `is_admin()` (`0003_admin_rls.sql`),
+  so the REST API denies non-admins. Remaining manual step: toggle off public signup in the
+  Supabase dashboard (see Setup step 3).
