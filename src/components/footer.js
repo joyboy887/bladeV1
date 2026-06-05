@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { Container } from "@/components/ui/container.js";
 
 export function Footer({ shop }) {
@@ -14,6 +15,14 @@ export function Footer({ shop }) {
           {shop.email ? <p>{shop.email}</p> : null}
           {shop.instagram ? <p>{shop.instagram}</p> : null}
         </div>
+      </Container>
+      <Container className="mt-8 border-t border-white/5 pt-6 text-center">
+        <Link
+          href="/admin"
+          className="text-xs text-white/30 transition-colors hover:text-white/60"
+        >
+          Staff login
+        </Link>
       </Container>
     </footer>
   );
